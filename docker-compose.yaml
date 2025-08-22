@@ -29,7 +29,7 @@ services:
       start_period: 20s
     networks:
       - evolution-net
-      - triexpert_default   # red del proyecto donde está tu Redis
+      - triexpert_redis   # red del proyecto donde está tu Redis
 
   postgres:
     container_name: postgres
@@ -52,7 +52,7 @@ services:
       retries: 5
     networks:
       - evolution-net
-      - triexpert_default   # opcional, pero ayuda si alguna vez quieres verlo desde otra app
+      - triexpert_redis   # opcional, pero ayuda si alguna vez quieres verlo desde otra app
 
 volumes:
   evolution_instances:
@@ -62,5 +62,5 @@ networks:
   evolution-net:
     name: evolution-net
     driver: bridge
-  triexpert_default:
+  triexpert_redis:
     external: true
