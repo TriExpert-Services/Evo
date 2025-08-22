@@ -17,52 +17,43 @@ services:
     env_file:
       - .env
     environment:
-      # asegúrate que .env use estos valores
       REDIS_HOST: redis
       REDIS_PORT: "6379"
-      # REDIS_PASSWORD: ""  # si lo habilitas abajo, coloca aquí la misma clave
-      # DATABASE_URL: "postgresql://user:pass@postgres:5432/evolution"  # si lo necesita tu build
+      # DATABASE_URL: "postgresql://user:pass@postgres:5432/evolution"
     expose:
       - "8080"
     healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/health"]
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8080/health || exit 1"]
       interval: 15s
       timeout: 5s
       retries: 5
 
   redis:
-    image: redis:7-alpine
+    image: redis:7.2-alpine
     container_name: redis
     networks:
       - evolution-net
-    # MODO CACHÉ: sin AOF/RDB para evitar caídas por I/O
     command: >
       redis-server
       --port 6379
-      --save ""
-      --appendonly no
+      --save ""                  # sin RDB
+      --appendonly no            # sin AOF (modo caché, más estable)
       --maxmemory 256mb
       --maxmemory-policy allkeys-lru
+      --bind 0.0.0.0
+      --protected-mode no        # red interna; evita bloqueos del healthcheck
       --tcp-keepalive 60
-      --protected-mode yes
-      --daemonize no
-      # --requirepass TU_PASSWORD_SEGURA   # opcional si decides protegerlo
     volumes:
       - evolution_redis:/data
-    # NO expongas fuera si no hace falta; API se conecta por red interna
+    # NO expongas si no es necesario
     # ports:
     #   - "6379:6379"
     restart: always
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ["CMD-SHELL", "redis-cli -h 127.0.0.1 -p 6379 ping | grep PONG >/dev/null || exit 1"]
       interval: 10s
       timeout: 3s
-      retries: 5
-    # pequeños “tunings” seguros
-    ulimits:
-      nofile: 10032
-    sysctls:
-      net.core.somaxconn: 1024
+      retries: 10
 
   postgres:
     container_name: postgres
@@ -71,7 +62,6 @@ services:
       - evolution-net
     command: ["postgres", "-c", "max_connections=200", "-c", "listen_addresses=*"]
     restart: always
-    # Evita exponer 5432 si no gestionas desde fuera del host
     # ports:
     #   - "5432:5432"
     environment:
