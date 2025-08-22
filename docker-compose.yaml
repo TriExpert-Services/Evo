@@ -56,7 +56,7 @@ services:
     restart: always
     healthcheck:
       # Usa la salida/exit code directo de redis-cli (sin grep)
-      test: ["CMD", "redis-cli", "-u", "redis://127.0.0.1:6379", "ping"]
+      test: ["CMD", "redis-cli", "-u", "redis://redis:6379", "ping"]
       interval: 5s
       timeout: 3s
       retries: 15
