@@ -28,7 +28,7 @@ services:
       timeout: 5s
       retries: 5
 
-    redis:
+  redis:
     image: redis:7.2-alpine
     container_name: redis
     networks:
@@ -38,9 +38,9 @@ services:
       - --port
       - "6379"
       - --save
-      - ""                # desactiva RDB (equivalente a --save "")
+      - ""                # desactiva RDB
       - --appendonly
-      - "no"              # sin AOF (modo caché, más estable)
+      - "no"              # sin AOF (modo caché)
       - --maxmemory
       - "256mb"
       - --maxmemory-policy
@@ -53,7 +53,7 @@ services:
       - "60"
     volumes:
       - evolution_redis:/data
-    # No expongas si no hace falta:
+    # Si no necesitas acceder desde fuera, no expongas:
     # ports:
     #   - "6379:6379"
     restart: always
