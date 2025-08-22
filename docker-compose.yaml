@@ -23,10 +23,12 @@ services:
     expose:
       - "8080"
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://triexpert_evolution_api:8080/health || exit 1"]
+      # Mejor apuntar a loopback dentro del contenedor
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8080/health || exit 1"]
       interval: 15s
       timeout: 5s
       retries: 5
+      start_period: 20s
 
   redis:
     image: redis:7.2-alpine
@@ -48,19 +50,19 @@ services:
       - --bind
       - 0.0.0.0
       - --protected-mode
-      - "no"              # necesario si expones fuera del loopback (red interna)
+      - "no"              # red interna
       - --tcp-keepalive
       - "60"
     volumes:
       - evolution_redis:/data
     restart: always
     healthcheck:
-      # Usa la salida/exit code directo de redis-cli (sin grep)
-      test: ["CMD", "redis-cli", "-u", "redis://redis:6379", "ping"]
+      # Usa binario absoluto y loopback; exit code 0 => healthy
+      test: ["CMD", "/usr/local/bin/redis-cli", "-h", "127.0.0.1", "-p", "6379", "ping"]
       interval: 5s
       timeout: 3s
-      retries: 15
-      start_period: 45s
+      retries: 20
+      start_period: 60s
 
   postgres:
     container_name: postgres
