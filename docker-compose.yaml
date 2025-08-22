@@ -38,9 +38,9 @@ services:
       - --port
       - "6379"
       - --save
-      - ""                # desactiva RDB
+      - ""                # sin RDB (cache)
       - --appendonly
-      - "no"              # sin AOF (modo caché)
+      - "no"              # sin AOF (cache)
       - --maxmemory
       - "256mb"
       - --maxmemory-policy
@@ -48,21 +48,19 @@ services:
       - --bind
       - 0.0.0.0
       - --protected-mode
-      - "no"              # red interna; evita rechazos del healthcheck
+      - "no"              # necesario si expones fuera del loopback (red interna)
       - --tcp-keepalive
       - "60"
     volumes:
       - evolution_redis:/data
-    # Si no necesitas acceder desde fuera, no expongas:
-    # ports:
-    #   - "6379:6379"
     restart: always
     healthcheck:
-      test: ["CMD-SHELL", "redis-cli -h 127.0.0.1 -p 6379 ping | grep PONG >/dev/null || exit 1"]
-      interval: 10s
+      # Usa la salida/exit code directo de redis-cli (sin grep)
+      test: ["CMD", "redis-cli", "-u", "redis://127.0.0.1:6379", "ping"]
+      interval: 5s
       timeout: 3s
-      retries: 10
-      start_period: 20s
+      retries: 15
+      start_period: 45s
 
   postgres:
     container_name: postgres
