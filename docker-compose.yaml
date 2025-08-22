@@ -16,9 +16,10 @@ services:
       # --- Redis externo del proyecto "triexpert" ---
       REDIS_HOST: triexpert_redis
       REDIS_PORT: "6379"
-      REDIS_PASSWORD: "evolution"             # cámbiala luego por una fuerte
+      REDIS_PASSWORD: "evolution"
+      REDIS_URL: "redis://default:evolution@triexpert_redis:6379"
       REDIS_URI: "redis://default:evolution@triexpert_redis:6379"
-      # ----------------------------------------------
+      # ------------------------------------------------
     expose:
       - "8080"
     healthcheck:
@@ -28,8 +29,8 @@ services:
       retries: 5
       start_period: 20s
     networks:
-      - easypanel-triexpert   # red compartida donde vive tu Redis
-      - evolution-net         # opcional: tu red local del proyecto
+      - default              # usa la red local ya creada (triexpert_evolution_default)
+      - easypanel-triexpert  # red overlay donde vive tu Redis
 
   postgres:
     container_name: postgres
@@ -51,17 +52,12 @@ services:
       timeout: 5s
       retries: 5
     networks:
-      - evolution-net         # no necesita ver Redis, pero puedes añadir overlay si quieres
+      - default
 
 volumes:
   evolution_instances:
   postgres_data:
 
 networks:
-  # red local del proyecto (si ya la tenías)
-  evolution-net:
-    name: triexpert_evolution_default
-    driver: bridge
-  # *** ESTA ES LA CLAVE ***
   easypanel-triexpert:
     external: true
